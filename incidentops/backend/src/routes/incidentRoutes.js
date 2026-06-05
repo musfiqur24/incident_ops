@@ -1,0 +1,10 @@
+const express = require('express');
+const ctrl = require('../controllers/incidentController');
+const { protect, adminOnly } = require('../middleware/auth');
+const router = express.Router();
+router.use(protect);
+router.get('/stats', ctrl.getStats);
+router.route('/').get(ctrl.getIncidents).post(ctrl.createIncident);
+router.route('/:id').get(ctrl.getIncident).patch(ctrl.updateIncident).delete(adminOnly, ctrl.deleteIncident);
+router.post('/:id/comments', ctrl.addComment);
+module.exports = router;
