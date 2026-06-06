@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 set -euo pipefail
-
 APP_DIR="${APP_DIR:-$PWD}"
 NODE_MAJOR="${NODE_MAJOR:-20}"
 MONGODB_MAJOR="${MONGODB_MAJOR:-8.0}"
@@ -34,14 +33,45 @@ echo "$NODE_REPO" | sudo tee /etc/apt/sources.list.d/nodesource.list >/dev/null
 sudo apt-get update -y
 sudo apt-get install -y nodejs
 
-echo "==> Installing MongoDB Community Server ${MONGODB_MAJOR}"
-curl -fsSL "https://www.mongodb.org/static/pgp/server-${MONGODB_MAJOR}.asc" | sudo gpg --dearmor -o "/usr/share/keyrings/mongodb-server-${MONGODB_MAJOR}.gpg"
-MONGO_REPO="deb [ arch=amd64,arm64 signed-by=/usr/share/keyrings/mongodb-server-${MONGODB_MAJOR}.gpg ] https://repo.mongodb.org/apt/ubuntu ${CODENAME}/mongodb-org/${MONGODB_MAJOR} multiverse"
-echo "$MONGO_REPO" | sudo tee "/etc/apt/sources.list.d/mongodb-org-${MONGODB_MAJOR}.list" >/dev/null
+node -v
+
+sudo apt install -y npm
+
+npm -v
+
+echo "==> Installing MongoDB Community Server"
+# Update system packages
+echo "Updating system packages..."
 sudo apt-get update -y
-sudo apt-get install -y mongodb-org
-sudo systemctl enable mongod
+
+
+#From a terminal, install gnupg and curl if they are not already available
+sudo apt-get install gnupg curl
+
+#To import the MongoDB public GPG key, run the following command
+curl -fsSL https://pgp.mongodb.com/server-8.0.asc | \
+   sudo gpg -o /usr/share/keyrings/mongodb-server-8.0.gpg \
+   --dearmor
+
+
+#Create the list file /etc/apt/sources.list.d/mongodb-enterprise-8.0.list for your version of Ubuntu.
+echo "deb [ arch=amd64,arm64 signed-by=/usr/share/keyrings/mongodb-server-8.0.gpg ] https://repo.mongodb.com/apt/ubuntu noble/mongodb-enterprise/8.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-enterprise-8.0.list
+
+#Reload the package database
+sudo apt-get update
+
+#Install MongoDB Enterprise Server
+sudo apt-get install -y mongodb-enterprise
+
+# Start MongoDB service
+echo "Starting MongoDB service..."
 sudo systemctl start mongod
+
+# Enable MongoDB to start on boot
+sudo systemctl enable mongod
+
+# Wait 10s for MongoDB to fully get started
+sleep 20
 
 echo "==> Creating environment files if missing"
 cd "$APP_DIR"

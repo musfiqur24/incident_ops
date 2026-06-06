@@ -225,6 +225,7 @@ Recommended for class practice:
 AMI: Ubuntu Server LTS
 Instance type: t2.micro or t3.micro for practice
 Storage: 20 GB+
+Open the Ubuntu version dropdown: Choose Ubuntu Server 24.04 LTS (HVM), SSD Volume Type
 ```
 
 ## 2. Configure Security Group inbound rules
