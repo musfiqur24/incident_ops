@@ -10,7 +10,32 @@ const notificationRoutes = require('./routes/notificationRoutes');
 const startReminderJob = require('./utils/reminderJob');
 
 const app = express();
-app.use(cors({ origin: process.env.CLIENT_URL || 'http://localhost:5173', credentials: true }));
+const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:5173';
+const corsOptions = {
+  origin: (origin, callback) => {
+    // allow requests with no origin (eg. mobile apps, curl)
+    if (!origin) return callback(null, true);
+    try {
+      const url = new URL(origin);
+      const isLocalhost = url.hostname === 'localhost' || url.hostname === '127.0.0.1';
+      if (origin === CLIENT_URL || isLocalhost && String(url.port) === '5173') return callback(null, true);
+    } catch (e) {
+      // if parsing fails, deny
+    }
+    return callback(new Error('CORS_NOT_ALLOWED'));
+  },
+  credentials: true,
+  methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  exposedHeaders: ['Set-Cookie']
+};
+// Log origin for debug to help with CORS troubleshooting
+app.use((req, res, next) => {
+  if (req.path === '/api/auth/login') console.debug('Incoming Origin:', req.headers.origin);
+  next();
+});
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
 app.use(express.json({ limit: '1mb' }));
 app.use(morgan('dev'));
 
